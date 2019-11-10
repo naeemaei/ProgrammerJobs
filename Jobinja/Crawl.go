@@ -53,13 +53,12 @@ func main() {
 			// Go to detail page
 			// Save in db
 			condb := GetConnection()
+
 			var jobId, _ = CreateMasterRecord(condb, jobTitle, company, place)
 
 			var newDocument = MakeHttpRequest(jobLink, 0)
 			newDocument.Find(".c-infoBox__item").Each(func(index int, element *goquery.Selection) {
-				fmt.Println(element.Find("h4").Text())
-				fmt.Println(element.Find("span").Text())
-				fmt.Println(newDocument.Find(".s-jobDesc ").Text())
+
 				CreateDetailRecord(condb, int(jobId), element.Find("h4").Text(), element.Find("span").Text())
 			})
 
@@ -69,8 +68,6 @@ func main() {
 		nextPage++
 		document = MakeHttpRequest(baseURL+jobPage+strings.Join(params[:], "&"), nextPage)
 	}
-
-	// Find and print image URLs
 
 	fmt.Println(pageCount)
 
