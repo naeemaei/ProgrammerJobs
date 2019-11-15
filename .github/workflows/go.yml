@@ -26,4 +26,4 @@ jobs:
         fi
 
     - name: Build
-      run: go build jobinja/crawl.go jobinja/SqlServerConnection.go -v .
+      run: go build jobinja/crawl.go jobinja/SqlServerConnection.go
