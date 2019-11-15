@@ -28,4 +28,4 @@ jobs:
     - name: Build
       run: |
         cd Jobinja
-        go build crawl.go SqlServerConnection.go
+        go build Crawl.go SqlServerConnection.go
