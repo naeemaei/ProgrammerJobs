@@ -23,6 +23,7 @@ var (
 )
 
 func main() {
+
 	TestConnection()
 
 	var document = MakeHttpRequest(baseURL+jobPage+strings.Join(params[:], "&"), 1)
