@@ -22,8 +22,10 @@ jobs:
         go get github.com/denisenkom/go-mssqldb
         if [ -f Gopkg.toml ]; then
             curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-            dep ensure
+            dep ensure 
         fi
 
     - name: Build
-      run: cd Jobinja |  go build crawl.go SqlServerConnection.go
+      run: |
+        cd Jobinja
+        go build crawl.go SqlServerConnection.go
