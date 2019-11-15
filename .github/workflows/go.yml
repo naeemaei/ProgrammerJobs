@@ -26,4 +26,4 @@ jobs:
         fi
 
     - name: Build
-      run: go build jobinja/crawl.go jobinja/SqlServerConnection.go
+      run: go build github.com/naeemaei/ProgrammerJobs/blob/master/jobinja/crawl.go github.com/naeemaei/ProgrammerJobs/blob/master/jobinja/SqlServerConnection.go
