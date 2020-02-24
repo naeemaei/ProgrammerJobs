@@ -25,12 +25,11 @@ var (
 func main() {
 
 	TestConnection()
-
-	var document = MakeHttpRequest(baseURL+jobPage+strings.Join(params[:], "&"), 1)
+	var document = makeHTTPRequest(baseURL+jobPage+strings.Join(params[:], "&"), 1)
 	// Get page count
 	var allLIs = document.Find(".paginator").Find("ul li")
 	var lastPage = document.Find(".paginator").Find("ul li").Eq(allLIs.Length() - 2)
-	pageCount, _ := ToLatinDigits(lastPage.Find("a").Text())
+	pageCount, _ := toLatinDigits(lastPage.Find("a").Text())
 	var nextPage int64 = 2
 	//pageCount = 2
 	for nextPage <= pageCount {
@@ -38,6 +37,7 @@ func main() {
 		// Find and print image URLs
 		document.Find(".o-listView__itemInfo").Each(func(index int, element *goquery.Selection) {
 
+			fmt.Println(baseURL+jobPage+strings.Join(params[:], "&"),nextPage-1)
 			// Get company name
 			var company = element.Find(".c-icon--construction").Parent().Find("span").Text()
 			fmt.Println(company)
@@ -55,26 +55,26 @@ func main() {
 			// Save in db
 			condb := GetConnection()
 
-			var jobId, _ = CreateMasterRecord(condb, jobTitle, company, place)
+			var jobId, _ =  CreateMasterRecord(condb, jobTitle, company, place)
 
-			var newDocument = MakeHttpRequest(jobLink, 0)
+			var newDocument = makeHTTPRequest(jobLink, 0)
 			newDocument.Find(".c-infoBox__item").Each(func(index int, element *goquery.Selection) {
 
-				CreateDetailRecord(condb, int(jobId), element.Find("h4").Text(), element.Find("span").Text())
+				 go CreateDetailRecord(condb, int(jobId), element.Find("h4").Text(), element.Find("span").Text())
 			})
 
-			CreateDetailRecord(condb, int(jobId), "Description", newDocument.Find(".s-jobDesc ").Text())
+			go CreateDetailRecord(condb, int(jobId), "Description", newDocument.Find(".s-jobDesc ").Text())
 
 		})
 		nextPage++
-		document = MakeHttpRequest(baseURL+jobPage+strings.Join(params[:], "&"), nextPage)
+		document = makeHTTPRequest(baseURL+jobPage+strings.Join(params[:], "&"), nextPage)
 	}
 
 	fmt.Println(pageCount)
 
 }
 
-func MakeHttpRequest(pageAddress string, pageNumber int64) *goquery.Document {
+func makeHTTPRequest(pageAddress string, pageNumber int64) *goquery.Document {
 	// Make HTTP request
 
 	if pageNumber > 0 {
@@ -82,7 +82,7 @@ func MakeHttpRequest(pageAddress string, pageNumber int64) *goquery.Document {
 	}
 	req, _ := http.NewRequest("GET", pageAddress, nil)
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
-	req.Header.Add("cookie", "__cfduid=d3f05b23a1361bf6bca9e9609ed485b5d1572807113; _ga=GA1.2.925358084.1572807126; _gid=GA1.2.608524599.1572807126; logglytrackingsession=5f9314f7-4f02-4eab-83f1-6cd1c8901c9a; remember_82e5d2c56bdd0811318f0cf078b78bfc=eyJpdiI6Ik96NngyRTV1VlBPMmZjTTFnamZmU3c9PSIsInZhbHVlIjoiOTJMVGdaYTBMODkyUUowTnNWWkxxbks3eCtyQ0pqS0lJUVR5eWlIVit3ekNRSUVuNWNqYzRRaDY2MTNuOHl2KzhERTNrcmVtY2kxc1wvUUxvNERGb1ErZ2t6dVFcL0d2ZVwvRmNwS0o3NThEKzQ9IiwibWFjIjoiNWE0NTU1Nzk2ZDhlNjZhNWY0YzQ5ZDhlNGU4Y2IzYjU3NDVhNzdhYTc4OWMzYTgxMjExYmZmMDQzOWE3YTI2ZiJ9; device_id=eyJpdiI6IldYM253WmkybytwZTB1c0k5ZzYzUHc9PSIsInZhbHVlIjoid2ZwRG1vZFwvMnFmcUF5aTJIcHB1c3c9PSIsIm1hYyI6IjBmYzIzNTgzZjllYjhjOTEyODFmNjY4MjUwZDZjZWUzOTYwYzExMmU4ZGQzMzY4MDc1OTY0NzQ5ZmQ3ODY5YWQifQ%3D%3D; XSRF-TOKEN=eyJpdiI6IkU1dnV3TkJFaWlJeTA0UGtuZUw2UGc9PSIsInZhbHVlIjoid00rSDEyUVZwMG1MSVhOak43cE9jT3NzUXBQblJsdGRaQXFJd0wrb0dyNkNNNkVDU3ZcL1wvQmVvdkpVd256U0RJMzZEbzRwTFNia1NrcENXcEFJZkRxQT09IiwibWFjIjoiY2RmZmMyMTczMmY3ODNkZjIwYzc2ZDlmZTUyODgzZmU1OTAwODk4ZGVjYWViYThjNzMwZjQ4YzY3YjI0YjgwNCJ9; JSESSID=eyJpdiI6IjVtK3JRNjYweEREOEJTenhnc2pxaUE9PSIsInZhbHVlIjoiVU5VUzNTV3V3bmtaT3h6V0dWRE95ck1adFl6T25TdEZBNWZBbkVrSXFpSURRelBORXkyWk9nc0huXC9veE00THUwWCtIeGVPSm1FeDNDc0k4WWhPdXNRPT0iLCJtYWMiOiJjMzQ0ZjI2MjNjZTFhZDI4MDk0Y2I5ZDRhODJkMzk0YTg3YWI4MTg4Y2NmNjhkZjEzYzBkZGUyM2RhZmVjNWI5In0%3D; user_mode=eyJpdiI6IjFGNUtOOTkzeFp2UlJJRnFpV1c4ZEE9PSIsInZhbHVlIjoiZnJxSm14RW4zYkxweTlsRUx2aGFIQT09IiwibWFjIjoiMGExZTc0Nzc5M2JhN2M4MzM4MGU1NDRmY2E0NWRiODczNTgzM2JhNjQ4YTA5MzY2YzA5NTk3NTAwMTg5NmEwZCJ9; _gat_gtag_UA_129125700_1=1")
+	req.Header.Add("cookie", "__cfduid=d7bc9f34afa3e43dcb38b6d3606b6d97a1572955671; _ga=GA1.2.1900100706.1572956281; remember_82e5d2c56bdd0811318f0cf078b78bfc=eyJpdiI6ImxaYjVTV25ld3FTa01OUmVDbXBUU3c9PSIsInZhbHVlIjoiUEpWVDI3ZHJhcUw4dENsaGRXSm5GVlpcL0FIc2QwYUZjNnFOTERxZ01nVXZHd3h3QVJ1RVB2XC84YUlXY25KNEFUZVg0STR6UkFMb1RFc0R2ZVl2bFhYblc3M250dmRWdHpla3dcL3B6aEJxaTA9IiwibWFjIjoiOTdkMmJlZTc3MTJlYjYzMjVjYWY0ZDI4Yzk2Yjc5ZTRjOWRkZGU3OWY1YmE5MmU1ZDRhY2YyOTkwNGExYTc2MSJ9; device_id=eyJpdiI6IjVYVXVtb2NudXRvd3JpeUo0ZDN2V0E9PSIsInZhbHVlIjoiMkduY09cLzlCZEdiV2pIQVpWdHU2OFE9PSIsIm1hYyI6ImY5ZTlmNWM5ZTE5OWQ4YThmYWFiYzk5MWI0MTMwZDQ0YzRkZDQ2NjViZWY0ZTFmMDBmMmI3NmE0YTFjNDM0NjEifQ%3D%3D; user_mode=eyJpdiI6ImZ5eVBubmFTaFh2TXV5UnVRNmRDUGc9PSIsInZhbHVlIjoiUWtzVjYrc0ZwTWhyWUpYR1R5SUJGUT09IiwibWFjIjoiYWI0Y2E1NzEzNDVlNjVjZjA5NTNjOWMzNWM3ZWM3NWQ2Y2UyMGI2NWM2YzQ1ZWFjOTUwZDFmMWQxYWMwMDM3MCJ9; logglytrackingsession=e39ce616-7c0a-44a5-82da-37207443fe15; _gid=GA1.2.547398638.1582531405; _gat_gtag_UA_129125700_1=1; XSRF-TOKEN=eyJpdiI6ImkwQ1czOVBOTU1EZUJWNUIySFdOQVE9PSIsInZhbHVlIjoiK2tnY0E0UkhSU3ZvKzBiT1lmZ3ZXSEJQTW5GNjkrQzRLVDFvUks0Zit0aERFcForU2E1cjNOcSszbERjOWxSSmlERXZzWk9JejZnNmVJcU5mVEs0akE9PSIsIm1hYyI6ImY3NjkzOTUxMmZmM2ZjMWUyZDRkMjI2Njk5MzEyNDk2NWZhM2FlNzJlMjMxMWQ2OGFiZWQxOWYzMzYxNTljMzUifQ%3D%3D; JSESSID=eyJpdiI6InFOQVNJbDl0RVoyZ1dDdEZDNll1MHc9PSIsInZhbHVlIjoiSnBoSngzYmY1VjdxbldkS1lCNjBxbUpcL0lpZ3FtNTNVaWtlU0JPYjRqTVdtMWQwN1JFU1NrMUtRcHR1Yk5NYlEyNHR1NnZNY2pFNFliN0lKWG5pQ2JBPT0iLCJtYWMiOiIxY2MxODYzZjc0MWJkNzg0MDUzZTljZTYyOWM0NzViYWFiNTI2MDYwOWFiOGQwZjFkMWViZTM5OWMyM2E2NmY1In0%3D")
 	response, err := http.DefaultClient.Do(req)
 
 	if err != nil {
@@ -98,7 +98,7 @@ func MakeHttpRequest(pageAddress string, pageNumber int64) *goquery.Document {
 	return document
 }
 
-func ToLatinDigits(persianNumber string) (i int64, err error) {
+func toLatinDigits(persianNumber string) (i int64, err error) {
 	var LatinDigits = strings.ReplaceAll(persianNumber, "۰", "0")
 	LatinDigits = strings.ReplaceAll(LatinDigits, "۷", "7")
 	LatinDigits = strings.ReplaceAll(LatinDigits, "۱", "1")

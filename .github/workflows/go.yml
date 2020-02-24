@@ -20,6 +20,8 @@ jobs:
       run: |
         go get github.com/PuerkitoBio/goquery
         go get github.com/denisenkom/go-mssqldb
+        go get github.com/proullon/ramsql
+
         if [ -f Gopkg.toml ]; then
             curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
             dep ensure 
